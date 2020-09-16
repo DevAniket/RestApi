@@ -1,0 +1,85 @@
+package com.aniket.productservice.productrestapi.service;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.aniket.productservice.productrestapi.exception.ResourceNotFoundException;
+import com.aniket.productservice.productrestapi.model.Product;
+import com.aniket.productservice.productrestapi.repository.ProductRepository;
+
+@Service
+@Transactional
+public class ProductServiceImpl implements ProductService{
+
+	@Autowired
+    private ProductRepository productRepository;
+
+
+    @Override
+    public Product addProduct(Product product) {
+        return productRepository.save(product);
+    }
+
+    @Override
+    public Product updateProduct(Product product) {
+        Optional < Product > productDb = this.productRepository.findById(product.getId());
+
+        if (productDb.isPresent()) {
+            Product productUpdate = productDb.get();
+            productUpdate.setId(product.getId());
+            productUpdate.setName(product.getName());
+            productUpdate.setDescription(product.getDescription());
+            productUpdate.setProductType(product.getProductType());
+            productUpdate.setProductFeatures(product.getProductFeatures());
+            productRepository.save(productUpdate);
+            return productUpdate;
+        } else {
+            throw new ResourceNotFoundException("Record not found with id : " + product.getId());
+        }
+    }
+
+    @Override
+    public List < Product > getAllProduct() {
+        return this.productRepository.findAll();
+    }
+
+    @Override
+    public Product getProductById(long productId) {
+
+        Optional < Product > productDb = this.productRepository.findById(productId);
+
+        if (productDb.isPresent()) {
+            return productDb.get();
+        } else {
+            throw new ResourceNotFoundException("Record not found with id : " + productId);
+        }
+    }
+
+    
+    @Override
+    public void deleteProduct(long productId) {
+        Optional < Product > productDb = this.productRepository.findById(productId);
+
+        if (productDb.isPresent()) {
+            this.productRepository.delete(productDb.get());
+        } else {
+            throw new ResourceNotFoundException("Record not found with id : " + productId);
+        }
+
+    }
+
+	@Override
+	public List<Product> getProductByProductType(String productType) {
+		List<Product> productDb = this.productRepository.getProductByProductType(productType);
+		if (!productDb.isEmpty()) {
+			return productDb;
+        } else {
+            throw new ResourceNotFoundException("Record not found with productType : " + productType);
+        }
+	}
+
+}
